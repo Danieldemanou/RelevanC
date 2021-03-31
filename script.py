@@ -25,7 +25,7 @@ def read_file_chunks(file_object, chunk_size=1000000):
 def dict_store_product(chunk_file, dict_d):
     """
     Takes in a file and a dictionary containing 'CA' and 'identifiant_produit' as keys
-    and generate a nested dictionary where each key represents a magazine.
+    and generates a nested dictionary where each key represents a shop.
     The dictionary has the following structure:
         {
             "code_magasin_1" : {'CA': revenue ,
@@ -41,7 +41,7 @@ def dict_store_product(chunk_file, dict_d):
         dict_d: a dictionary
 
     Returns:
-        Dictionary listing each of the markets as a key
+        Dictionary listing each of the shops as a key
     """
 
     for line in chunk_file:
@@ -79,7 +79,7 @@ def save_data_dict_store(output_dict, output_filename="top-50-store"):
         }
     Args:
         output_dict: a dictionary to be used to create a csv file
-        output_file: name of the file output
+        output_file: name of the output file 
 
     """
     col_name = "code_magasin|CA"
@@ -94,7 +94,7 @@ def save_data_dict_store(output_dict, output_filename="top-50-store"):
 def save_data_dict_product(output_dict):
     """
     Saves the dictionary as a csv file. 
-    the dicttionnary is supposed to have this structure :
+    the dictionary is supposed to have this structure :
         {
             "code_magasin_1" : {'CA': revenue ,
                                 'identifiant_produit_1' : number of occurence in the store,
@@ -108,7 +108,7 @@ def save_data_dict_product(output_dict):
         output_dict: a dictionary to be used to create a csv file
         
     Returns:
-       one file for each keys (code_magasin) of the dictionary.
+       one file for each key (code_magasin) of the dictionary.
        
     """
     col_name = "code_magasin|identifiant_produit|CA"
@@ -128,13 +128,13 @@ def save_data_dict_product(output_dict):
 
 def my_key_order_product(input_dict):
     """
-    Sort a dictionary without considering the CA
+    Sorts a dictionary without considering the CA
     
     Args:
-        output_dict: a dictionary to be sort
+        output_dict: a dictionary to sort
         
     Returns:
-       one identifiant_produit for each keys (code_magasin) of the dictionary.
+       one identifiant_produit for each key (code_magasin) of the dictionary.
     
     """
     for i in input_dict[1]:
