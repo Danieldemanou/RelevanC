@@ -9,3 +9,5 @@ The psv file can be downloaded with this link :  https://storage.googleapis.com/
 In order to run the script, you must unzip the data and put it in the folder in which is the script
 
 Command: time python script.py 
+
+This script should take 3 to 5 min to run depending on computer used
