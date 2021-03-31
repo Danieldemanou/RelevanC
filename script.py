@@ -152,7 +152,7 @@ if __name__ == "__main__":
         next(f)
         for data in read_file_chunks(f):
             if i % 1000 == 0:
-                print('iteration: ',i)
+                print('iterations: ',i)
             d_product = dict_store_product(data, d_product)
             i += 1
 
