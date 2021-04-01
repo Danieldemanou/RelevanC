@@ -22,7 +22,7 @@ def read_file_chunks(file_object, chunk_size=1000000):
         yield chunked_data
 
 
-def dict_store_product(chunk_file, dict_d):
+def aggregation_store_product(chunk_mothn_transaction, dict_shop):
     """
     Takes in a file and a dictionary containing 'CA' and 'identifiant_produit' as keys
     and generates a nested dictionary where each key represents a shop.
@@ -37,34 +37,33 @@ def dict_store_product(chunk_file, dict_d):
              ....
         }
     Args:
-        chunk_file: a file, chunk from the original psv file
-        dict_d: a dictionary
+        chunk_mothn_transaction: a file, chunk from the original psv file
+        dict_shop: a dictionary
 
     Returns:
         Dictionary listing each of the shops as a key
     """
-
-    for line in chunk_file:
+    for transaction in chunk_mothn_transaction:
         # one line of a receipt
-        line_data = line.split('|')
+        _, _,identifiant_produit,code_magasin,_,prix = transaction.split('|')
 
         # addition of shop and product in dictionary
-        if line_data[3] in dict_d.keys():
-            if line_data[2] in dict_d[line_data[3]].keys():
-                dict_d[line_data[3]][line_data[2]] += 1
+        if code_magasin in dict_shop.keys():
+            if identifiant_produit in dict_shop[code_magasin].keys():
+                dict_shop[code_magasin][identifiant_produit] += 1
             else:
-                dict_d[line_data[3]][line_data[2]] = 1
+                dict_shop[code_magasin][identifiant_produit] = 1
 
         else:
-            dict_d[line_data[3]] = {}
-            dict_d[line_data[3]][line_data[2]] = 1
-            dict_d[line_data[3]]['CA'] = 0
+            dict_shop[code_magasin] = {}
+            dict_shop[code_magasin][identifiant_produit] = 1
+            dict_shop[code_magasin]['CA'] = float(prix)
 
-        dict_d[line_data[3]]['CA'] += float(line_data[5])
-    return dict_d
+        dict_shop[code_magasin]['CA'] += float(prix)
+    return dict_shop
 
 
-def save_data_dict_store(output_dict, output_filename="top-50-store"):
+def save_top_50_stores(output_dict, output_filename="top-50-store"):
     """
     Saves the dictionary as a csv file.
     The dictionary is supposed to have this structure :
@@ -82,6 +81,7 @@ def save_data_dict_store(output_dict, output_filename="top-50-store"):
         output_file: name of the output file 
 
     """
+    
     col_name = "code_magasin|CA"
     output_file = output_filename + ".csv"
     
@@ -91,7 +91,8 @@ def save_data_dict_store(output_dict, output_filename="top-50-store"):
             csvFile.write(" ".join(str(key) + "|" + str(output_dict[key]['CA']) + "\n"))
 
 
-def save_data_dict_product(output_dict):
+def save_top_100_products(month_stores_data):
+    
     """
     Saves the dictionary as a csv file. 
     the dictionary is supposed to have this structure :
@@ -105,25 +106,30 @@ def save_data_dict_product(output_dict):
              ....
         }
     Args:
-        output_dict: a dictionary to be used to create a csv file
+        month_stores_data : a dictionary to be used to create a csv file
         
     Returns:
        one file for each key (code_magasin) of the dictionary.
        
     """
+    
     col_name = "code_magasin|identifiant_produit|CA"
-    try:
+    
+    if not os.path.exists('top-products-by_store'):
         os.makedirs('top-products-by_store')
-    except OSError:
-        pass
-    for key in output_dict:
+
+
+    for key in month_stores_data:
         with open("top-products-by_store/top-100-products-store-" + str(key) + ".csv", 'w') as csvFile:
             csvFile.write(" ".join(col_name) + "\n")
-            j = 0
-            for i in output_dict[key]:
-                if i != 'CA' and j < 100:
-                    csvFile.write(" ".join(str(key) + "|" + str(i) + "|" + str(output_dict[key]['CA']) + "\n"))
-                    j += 1
+            
+            CA_value = month_stores_data[key]['CA']
+            month_stores_data[key].pop('CA',None)
+            
+            for j, product in enumerate(month_stores_data[key]):
+                if j < 100:
+                    csvFile.write(" ".join(str(key) + "|" + str(product) + "|" + str(CA_value) + "\n"))
+
 
 
 def my_key_order_product(input_dict):
@@ -153,17 +159,17 @@ if __name__ == "__main__":
         for data in read_file_chunks(f):
             if i % 1000 == 0:
                 print('iterations: ',i)
-            d_product = dict_store_product(data, d_product)
+            d_product = aggregation_store_product(data, d_product)
             i += 1
 
     ### sorting different dictionaries
     print("Sorting data")
-    data_order_50 = dict(sorted(d_product.items(), key=lambda item: item[1]['CA'], reverse=True)[:50])
-    product_order = dict(sorted(d_product.items(), key=my_key_order_product, reverse=True))
+    top_50_shops = dict(sorted(d_product.items(), key=lambda item: item[1]['CA'], reverse=True)[:50])
+    products_order_by_shop = dict(sorted(d_product.items(), key=my_key_order_product, reverse=True))
 
     ### saving data
     print("Saving data to csv")
-    save_data_dict_store(data_order_50)
-    save_data_dict_product(product_order)
+    save_top_50_stores(top_50_shops)
+    save_top_100_products(products_order_by_shop)
 
 
